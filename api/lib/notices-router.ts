@@ -13,56 +13,67 @@ function requireAdmin(req: express.Request, res: express.Response, next: express
   next();
 }
 
-export function createNoticesRouter(store: NoticeStore) {
+function errorDetail(err: unknown): string {
+  return err instanceof Error ? err.message : String(err);
+}
+
+/**
+ * `getStore` is a lazy getter (not an already-constructed store) so that a
+ * misconfigured backend (e.g. a malformed SUPABASE_URL) throws from inside
+ * a request's try/catch below instead of crashing the whole serverless
+ * function at module load — which surfaces as an opaque
+ * FUNCTION_INVOCATION_FAILED page with no diagnosable error.
+ */
+export function createNoticesRouter(getStore: () => NoticeStore) {
   const router = express.Router();
 
   router.get('/notices', async (_req, res) => {
     try {
-      res.json(await store.list());
+      res.json(await getStore().list());
     } catch (err) {
       console.error(err);
-      res.status(500).json({ error: 'Failed to fetch notices' });
+      res.status(500).json({ error: 'Failed to fetch notices', detail: errorDetail(err) });
     }
   });
 
   router.post('/notices', requireAdmin, async (req, res) => {
     try {
-      res.status(201).json(await store.create(req.body));
+      res.status(201).json(await getStore().create(req.body));
     } catch (err) {
       console.error(err);
-      res.status(500).json({ error: 'Failed to add notice' });
+      res.status(500).json({ error: 'Failed to add notice', detail: errorDetail(err) });
     }
   });
 
   router.put('/notices/:id', requireAdmin, async (req, res) => {
     try {
-      const updated = await store.update(req.params.id, req.body);
+      const updated = await getStore().update(req.params.id, req.body);
       if (!updated) return res.status(404).json({ error: 'Notice not found' });
       res.json(updated);
     } catch (err) {
       console.error(err);
-      res.status(500).json({ error: 'Failed to update notice' });
+      res.status(500).json({ error: 'Failed to update notice', detail: errorDetail(err) });
     }
   });
 
   router.delete('/notices/:id', requireAdmin, async (req, res) => {
     try {
-      await store.remove(req.params.id);
+      await getStore().remove(req.params.id);
       res.json({ success: true });
     } catch (err) {
       console.error(err);
-      res.status(500).json({ error: 'Failed to delete notice' });
+      res.status(500).json({ error: 'Failed to delete notice', detail: errorDetail(err) });
     }
   });
 
   router.post('/notices/:id/view', async (req, res) => {
     try {
-      const views = await store.incrementView(req.params.id);
+      const views = await getStore().incrementView(req.params.id);
       if (views === null) return res.status(404).json({ error: 'Notice not found' });
       res.json({ views });
     } catch (err) {
       console.error(err);
-      res.status(500).json({ error: 'Failed to increment view' });
+      res.status(500).json({ error: 'Failed to increment view', detail: errorDetail(err) });
     }
   });
 

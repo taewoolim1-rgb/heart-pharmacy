@@ -13,7 +13,7 @@ async function startServer() {
   const PORT = process.env.PORT ? Number(process.env.PORT) : 3000;
 
   app.use(express.json());
-  app.use('/api', createNoticesRouter(getNoticeStore()));
+  app.use('/api', createNoticesRouter(getNoticeStore));
 
   // Serve assets
   if (process.env.NODE_ENV !== 'production') {

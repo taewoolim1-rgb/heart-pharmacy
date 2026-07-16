@@ -4,6 +4,6 @@ import { getNoticeStore } from './lib/get-store';
 
 const app = express();
 app.use(express.json());
-app.use('/api', createNoticesRouter(getNoticeStore()));
+app.use('/api', createNoticesRouter(getNoticeStore));
 
 export default app;
