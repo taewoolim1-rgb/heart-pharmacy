@@ -1,3 +1,4 @@
+import { randomUUID } from 'node:crypto';
 import { createClient } from '@supabase/supabase-js';
 import type { NoticeItem } from '../../src/types';
 import type { NewNoticeInput, NoticeStore } from './notice-store';
@@ -27,7 +28,7 @@ export function createSupabaseStore(): NoticeStore {
 
     async create(input: NewNoticeInput) {
       const row = {
-        id: crypto.randomUUID(),
+        id: randomUUID(),
         views: 0,
         ...input
       };

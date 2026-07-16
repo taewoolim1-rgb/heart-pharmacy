@@ -55,15 +55,29 @@ export default function NewsTab({ language }: NewsTabProps) {
     fetchNotices();
   }, []);
 
-  // Admin authorization state with robust try-catch
-  const [isAdmin, setIsAdmin] = useState<boolean>(() => {
+  // Admin authorization state with robust try-catch.
+  // The passcode itself (not just a boolean flag) is kept so it can be sent
+  // to the API on every write, since the server independently verifies it.
+  const [adminPasscode, setAdminPasscode] = useState<string>(() => {
     try {
-      return sessionStorage.getItem('maum_is_admin') === 'true';
+      return sessionStorage.getItem('maum_admin_passcode') || '';
     } catch (e) {
       console.error('Error reading from sessionStorage:', e);
-      return false;
+      return '';
     }
   });
+  const isAdmin = adminPasscode !== '';
+
+  const adminHeaders = (): Record<string, string> =>
+    adminPasscode ? { 'x-admin-passcode': adminPasscode } : {};
+
+  // If the server rejects a write because the stored passcode is stale or
+  // wrong, drop back to the logged-out state instead of leaving the admin
+  // controls visibly stuck in a broken state.
+  const handleUnauthorized = () => {
+    handleLogout();
+    alert(curr.adminPasscodeIncorrect);
+  };
 
   // Admin login modal states
   const [showLoginModal, setShowLoginModal] = useState(false);
@@ -207,16 +221,18 @@ export default function NewsTab({ language }: NewsTabProps) {
 
   const curr = t[language] || t.ko;
 
-  // Login handler with robust try-catch
+  // Login handler with robust try-catch. The passcode is verified for real
+  // by the server on each write; this local check just gives instant
+  // feedback without a round trip.
   const handleVerifyPasscode = (e: React.FormEvent) => {
     e.preventDefault();
     if (passcode === '73103110') {
-      setIsAdmin(true);
       try {
-        sessionStorage.setItem('maum_is_admin', 'true');
+        sessionStorage.setItem('maum_admin_passcode', passcode);
       } catch (err) {
         console.error('Error saving to sessionStorage:', err);
       }
+      setAdminPasscode(passcode);
       setShowLoginModal(false);
       setPasscode('');
       setLoginError(false);
@@ -227,9 +243,9 @@ export default function NewsTab({ language }: NewsTabProps) {
 
   // Logout handler with robust try-catch
   const handleLogout = () => {
-    setIsAdmin(false);
+    setAdminPasscode('');
     try {
-      sessionStorage.removeItem('maum_is_admin');
+      sessionStorage.removeItem('maum_admin_passcode');
     } catch (err) {
       console.error('Error removing from sessionStorage:', err);
     }
@@ -239,8 +255,12 @@ export default function NewsTab({ language }: NewsTabProps) {
   const handleDeleteNotice = (id: string, e: React.MouseEvent) => {
     e.stopPropagation();
     if (window.confirm(curr.adminConfirmDelete)) {
-      fetch(`/api/notices/${id}`, { method: 'DELETE' })
+      fetch(`/api/notices/${id}`, { method: 'DELETE', headers: adminHeaders() })
         .then((res) => {
+          if (res.status === 401) {
+            handleUnauthorized();
+            throw new Error('Unauthorized');
+          }
           if (!res.ok) throw new Error('Delete failed');
           setNotices((prev) => prev.filter((item) => item.id !== id));
           if (selectedNotice && selectedNotice.id === id) {
@@ -248,6 +268,7 @@ export default function NewsTab({ language }: NewsTabProps) {
           }
         })
         .catch((err) => {
+          if (err.message === 'Unauthorized') return;
           console.error('Error deleting notice:', err);
           alert('공지사항 삭제에 실패했습니다.');
         });
@@ -302,10 +323,14 @@ export default function NewsTab({ language }: NewsTabProps) {
 
       fetch(`/api/notices/${editingNotice.id}`, {
         method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json', ...adminHeaders() },
         body: JSON.stringify(updatedItem)
       })
         .then((res) => {
+          if (res.status === 401) {
+            handleUnauthorized();
+            throw new Error('Unauthorized');
+          }
           if (!res.ok) throw new Error('Update failed');
           return res.json();
         })
@@ -322,6 +347,7 @@ export default function NewsTab({ language }: NewsTabProps) {
           setEditingNotice(null);
         })
         .catch((err) => {
+          if (err.message === 'Unauthorized') return;
           console.error('Error updating notice:', err);
           alert('공지사항 저장에 실패했습니다.');
         });
@@ -332,18 +358,21 @@ export default function NewsTab({ language }: NewsTabProps) {
         titleEn: inputTitleEn || inputTitleKo,
         titleZh: inputTitleZh || inputTitleKo,
         contentKo: inputContentKo,
-        contentEn: inputContentEn || inputTitleKo,
-        contentZh: inputContentZh || inputTitleKo,
-        date: inputDate,
-        views: 0
+        contentEn: inputContentEn || inputContentKo,
+        contentZh: inputContentZh || inputContentKo,
+        date: inputDate
       };
 
       fetch('/api/notices', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json', ...adminHeaders() },
         body: JSON.stringify(newNotice)
       })
         .then((res) => {
+          if (res.status === 401) {
+            handleUnauthorized();
+            throw new Error('Unauthorized');
+          }
           if (!res.ok) throw new Error('Add failed');
           return res.json();
         })
@@ -353,6 +382,7 @@ export default function NewsTab({ language }: NewsTabProps) {
           setEditingNotice(null);
         })
         .catch((err) => {
+          if (err.message === 'Unauthorized') return;
           console.error('Error adding notice:', err);
           alert('공지사항 추가에 실패했습니다.');
         });
@@ -406,10 +436,14 @@ export default function NewsTab({ language }: NewsTabProps) {
 
     fetch(`/api/notices/${selectedNotice.id}`, {
       method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
+      headers: { 'Content-Type': 'application/json', ...adminHeaders() },
       body: JSON.stringify(updatedFields)
     })
       .then((res) => {
+        if (res.status === 401) {
+          handleUnauthorized();
+          throw new Error('Unauthorized');
+        }
         if (!res.ok) throw new Error('Update body failed');
         return res.json();
       })
@@ -421,6 +455,7 @@ export default function NewsTab({ language }: NewsTabProps) {
         setIsEditingBody(false);
       })
       .catch((err) => {
+        if (err.message === 'Unauthorized') return;
         console.error('Error saving detail body:', err);
         alert('본문 저장에 실패했습니다.');
       });
