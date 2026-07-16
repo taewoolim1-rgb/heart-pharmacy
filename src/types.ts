@@ -16,5 +16,4 @@ export interface NoticeItem {
   contentEn: string;
   contentZh: string;
   date: string;
-  views: number;
 }
