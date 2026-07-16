@@ -19,19 +19,7 @@ import {
   Eye,
   FileText
 } from 'lucide-react';
-import { Language } from '../types';
-
-export interface NoticeItem {
-  id: string;
-  titleKo: string;
-  titleEn: string;
-  titleZh: string;
-  contentKo: string;
-  contentEn: string;
-  contentZh: string;
-  date: string;
-  views: number;
-}
+import { Language, NoticeItem } from '../types';
 
 interface NewsTabProps {
   language: Language;
