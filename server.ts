@@ -5,8 +5,8 @@
 
 import express from 'express';
 import path from 'path';
-import { createNoticesRouter } from './api/lib/notices-router';
-import { getNoticeStore } from './api/lib/get-store';
+import { createNoticesRouter } from './api/lib/notices-router.js';
+import { getNoticeStore } from './api/lib/get-store.js';
 
 async function startServer() {
   const app = express();
