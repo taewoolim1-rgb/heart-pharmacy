@@ -74,26 +74,45 @@ interface NewsTabProps {
 }
 
 export default function NewsTab({ language }: NewsTabProps) {
-  // Notices state with localStorage persistence and robust try-catch
-  const [notices, setNotices] = useState<NoticeItem[]>(() => {
-    try {
-      const saved = localStorage.getItem('maum_notices');
-      if (saved) {
-        return JSON.parse(saved);
-      }
-    } catch (e) {
-      console.error('Error parsing notices:', e);
-    }
-    return DEFAULT_NOTICES;
-  });
-
+  const [notices, setNotices] = useState<NoticeItem[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
 
+  // Fetch notices on mount
   useEffect(() => {
-    try {
-      localStorage.setItem('maum_notices', JSON.stringify(notices));
-    } catch (e) {
-      console.error('Error saving notices:', e);
+    fetch('/api/notices')
+      .then((res) => {
+        if (!res.ok) throw new Error('Failed to fetch');
+        return res.json();
+      })
+      .then((data) => {
+        setNotices(data);
+        setIsLoading(false);
+      })
+      .catch((err) => {
+        console.error('Error fetching notices:', err);
+        try {
+          const saved = localStorage.getItem('maum_notices');
+          if (saved) {
+            setNotices(JSON.parse(saved));
+          } else {
+            setNotices(DEFAULT_NOTICES);
+          }
+        } catch (e) {
+          setNotices(DEFAULT_NOTICES);
+        }
+        setIsLoading(false);
+      });
+  }, []);
+
+  // Sync to local storage as fallback
+  useEffect(() => {
+    if (notices.length > 0) {
+      try {
+        localStorage.setItem('maum_notices', JSON.stringify(notices));
+      } catch (e) {
+        console.error('Error saving notices to localStorage:', e);
+      }
     }
   }, [notices]);
 
@@ -275,10 +294,18 @@ export default function NewsTab({ language }: NewsTabProps) {
   const handleDeleteNotice = (id: string, e: React.MouseEvent) => {
     e.stopPropagation();
     if (window.confirm(curr.adminConfirmDelete)) {
-      setNotices((prev) => prev.filter((item) => item.id !== id));
-      if (selectedNotice && selectedNotice.id === id) {
-        setSelectedNotice(null);
-      }
+      fetch(`/api/notices/${id}`, { method: 'DELETE' })
+        .then((res) => {
+          if (!res.ok) throw new Error('Delete failed');
+          setNotices((prev) => prev.filter((item) => item.id !== id));
+          if (selectedNotice && selectedNotice.id === id) {
+            setSelectedNotice(null);
+          }
+        })
+        .catch((err) => {
+          console.error('Error deleting notice:', err);
+          alert('공지사항 삭제에 실패했습니다.');
+        });
     }
   };
 
@@ -318,43 +345,44 @@ export default function NewsTab({ language }: NewsTabProps) {
 
     if (editingNotice) {
       // Edit mode
-      setNotices((prev) =>
-        prev.map((item) =>
-          item.id === editingNotice.id
-            ? {
-                ...item,
-                titleKo: inputTitleKo,
-                titleEn: inputTitleEn || inputTitleKo,
-                titleZh: inputTitleZh || inputTitleKo,
-                contentKo: inputContentKo,
-                contentEn: inputContentEn || inputContentKo,
-                contentZh: inputContentZh || inputContentKo,
-                date: inputDate
-              }
-            : item
-        )
-      );
+      const updatedItem = {
+        titleKo: inputTitleKo,
+        titleEn: inputTitleEn || inputTitleKo,
+        titleZh: inputTitleZh || inputTitleKo,
+        contentKo: inputContentKo,
+        contentEn: inputContentEn || inputContentKo,
+        contentZh: inputContentZh || inputContentKo,
+        date: inputDate
+      };
 
-      // If the currently viewed notice is edited, update its detail modal as well
-      if (selectedNotice && selectedNotice.id === editingNotice.id) {
-        setSelectedNotice((prev) => {
-          if (!prev) return null;
-          return {
-            ...prev,
-            titleKo: inputTitleKo,
-            titleEn: inputTitleEn || inputTitleKo,
-            titleZh: inputTitleZh || inputTitleKo,
-            contentKo: inputContentKo,
-            contentEn: inputContentEn || inputContentKo,
-            contentZh: inputContentZh || inputContentKo,
-            date: inputDate
-          };
+      fetch(`/api/notices/${editingNotice.id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(updatedItem)
+      })
+        .then((res) => {
+          if (!res.ok) throw new Error('Update failed');
+          return res.json();
+        })
+        .then((savedNotice) => {
+          setNotices((prev) =>
+            prev.map((item) => (item.id === editingNotice.id ? savedNotice : item))
+          );
+
+          // If the currently viewed notice is edited, update its detail modal as well
+          if (selectedNotice && selectedNotice.id === editingNotice.id) {
+            setSelectedNotice(savedNotice);
+          }
+          setShowEditModal(false);
+          setEditingNotice(null);
+        })
+        .catch((err) => {
+          console.error('Error updating notice:', err);
+          alert('공지사항 저장에 실패했습니다.');
         });
-      }
     } else {
       // Add mode
-      const newNotice: NoticeItem = {
-        id: Date.now().toString(),
+      const newNotice = {
         titleKo: inputTitleKo,
         titleEn: inputTitleEn || inputTitleKo,
         titleZh: inputTitleZh || inputTitleKo,
@@ -364,34 +392,69 @@ export default function NewsTab({ language }: NewsTabProps) {
         date: inputDate,
         views: 0
       };
-      setNotices((prev) => [newNotice, ...prev]);
-    }
 
-    setShowEditModal(false);
-    setEditingNotice(null);
+      fetch('/api/notices', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(newNotice)
+      })
+        .then((res) => {
+          if (!res.ok) throw new Error('Add failed');
+          return res.json();
+        })
+        .then((savedNotice) => {
+          setNotices((prev) => [savedNotice, ...prev]);
+          setShowEditModal(false);
+          setEditingNotice(null);
+        })
+        .catch((err) => {
+          console.error('Error adding notice:', err);
+          alert('공지사항 추가에 실패했습니다.');
+        });
+    }
   };
 
   // Click on a notice to view detail and increment view count
   const handleOpenNoticeDetail = (notice: NoticeItem) => {
-    // 1. Increment view count in notices state
-    setNotices((prev) =>
-      prev.map((item) =>
-        item.id === notice.id
-          ? { ...item, views: (item.views || 0) + 1 }
-          : item
-      )
-    );
+    // 1. Increment view count on server
+    fetch(`/api/notices/${notice.id}/view`, { method: 'POST' })
+      .then((res) => {
+        if (!res.ok) throw new Error('View failed');
+        return res.json();
+      })
+      .then((data) => {
+        setNotices((prev) =>
+          prev.map((item) =>
+            item.id === notice.id
+              ? { ...item, views: data.views }
+              : item
+          )
+        );
+        setSelectedNotice({
+          ...notice,
+          views: data.views
+        });
+      })
+      .catch((err) => {
+        console.error('Error incrementing view:', err);
+        // Fallback local increment if fetch fails
+        setNotices((prev) =>
+          prev.map((item) =>
+            item.id === notice.id
+              ? { ...item, views: (item.views || 0) + 1 }
+              : item
+          )
+        );
+        setSelectedNotice({
+          ...notice,
+          views: (notice.views || 0) + 1
+        });
+      });
 
     // 2. Prepare detail text fields in case admin edits it
     setDetailContentKo(notice.contentKo || '');
     setDetailContentEn(notice.contentEn || '');
     setDetailContentZh(notice.contentZh || '');
-
-    // 3. Set selected notice with incremented views
-    setSelectedNotice({
-      ...notice,
-      views: (notice.views || 0) + 1
-    });
 
     setIsEditingBody(false);
   };
@@ -401,30 +464,32 @@ export default function NewsTab({ language }: NewsTabProps) {
     e.preventDefault();
     if (!selectedNotice) return;
 
-    setNotices((prev) =>
-      prev.map((item) =>
-        item.id === selectedNotice.id
-          ? {
-              ...item,
-              contentKo: detailContentKo,
-              contentEn: detailContentEn,
-              contentZh: detailContentZh
-            }
-          : item
-      )
-    );
+    const updatedFields = {
+      contentKo: detailContentKo,
+      contentEn: detailContentEn,
+      contentZh: detailContentZh
+    };
 
-    setSelectedNotice((prev) => {
-      if (!prev) return null;
-      return {
-        ...prev,
-        contentKo: detailContentKo,
-        contentEn: detailContentEn,
-        contentZh: detailContentZh
-      };
-    });
-
-    setIsEditingBody(false);
+    fetch(`/api/notices/${selectedNotice.id}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(updatedFields)
+    })
+      .then((res) => {
+        if (!res.ok) throw new Error('Update body failed');
+        return res.json();
+      })
+      .then((savedNotice) => {
+        setNotices((prev) =>
+          prev.map((item) => (item.id === selectedNotice.id ? savedNotice : item))
+        );
+        setSelectedNotice(savedNotice);
+        setIsEditingBody(false);
+      })
+      .catch((err) => {
+        console.error('Error saving detail body:', err);
+        alert('본문 저장에 실패했습니다.');
+      });
   };
 
   const getNoticeTitle = (notice: NoticeItem) => {
@@ -527,7 +592,14 @@ export default function NewsTab({ language }: NewsTabProps) {
       {/* 3. Notice Listings Board */}
       <div className="bg-white rounded-3xl border border-slate-100 shadow-xs p-6 md:p-8">
         <div className="divide-y divide-slate-100/80">
-          {filteredNotices.length === 0 ? (
+          {isLoading ? (
+            <div className="py-16 text-center space-y-3">
+              <div className="w-8 h-8 border-3 border-emerald-500 border-t-transparent rounded-full animate-spin mx-auto" />
+              <p className="text-xs text-slate-400 font-medium font-sans">
+                {language === 'ko' ? '공지사항을 불러오는 중입니다...' : language === 'en' ? 'Loading announcements...' : '正在加载公告...'}
+              </p>
+            </div>
+          ) : filteredNotices.length === 0 ? (
             <div className="py-16 text-center space-y-2">
               <div className="w-12 h-12 bg-slate-50 rounded-2xl flex items-center justify-center text-slate-400 mx-auto">
                 <Info className="w-5 h-5" />

@@ -341,9 +341,6 @@ export default function App() {
                 <p className="text-[8px] text-slate-500 font-bold uppercase tracking-wider">Heart Pharm</p>
               </div>
             </div>
-            <p className="text-[11px] text-slate-500 leading-relaxed font-light max-w-md">
-              {curr.footerDesc}
-            </p>
             <a
               href="https://www.instagram.com/heart.pharm/"
               target="_blank"
