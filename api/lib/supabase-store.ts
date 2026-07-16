@@ -4,7 +4,7 @@ import type { NoticeItem } from '../../src/types';
 import type { NewNoticeInput, NoticeStore } from './notice-store';
 
 const TABLE = 'notices';
-const COLUMNS = 'id, titleKo, titleEn, titleZh, contentKo, contentEn, contentZh, date, views';
+const COLUMNS = 'id, titleKo, titleEn, titleZh, contentKo, contentEn, contentZh, date';
 
 export function createSupabaseStore(): NoticeStore {
   const url = process.env.SUPABASE_URL;
@@ -29,7 +29,6 @@ export function createSupabaseStore(): NoticeStore {
     async create(input: NewNoticeInput) {
       const row = {
         id: randomUUID(),
-        views: 0,
         ...input
       };
       const { data, error } = await client.from(TABLE).insert(row).select(COLUMNS).single();
@@ -52,21 +51,6 @@ export function createSupabaseStore(): NoticeStore {
     async remove(id: string) {
       const { error } = await client.from(TABLE).delete().eq('id', id);
       if (error) throw error;
-    },
-
-    async incrementView(id: string) {
-      const { data: existing, error: fetchError } = await client
-        .from(TABLE)
-        .select('views')
-        .eq('id', id)
-        .maybeSingle();
-      if (fetchError) throw fetchError;
-      if (!existing) return null;
-
-      const nextViews = (existing.views ?? 0) + 1;
-      const { error: updateError } = await client.from(TABLE).update({ views: nextViews }).eq('id', id);
-      if (updateError) throw updateError;
-      return nextViews;
     }
   };
 }

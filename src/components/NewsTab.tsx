@@ -16,7 +16,6 @@ import {
   Info,
   Search,
   CalendarDays,
-  Eye,
   FileText
 } from 'lucide-react';
 import { Language, NoticeItem } from '../types';
@@ -127,8 +126,6 @@ export default function NewsTab({ language }: NewsTabProps) {
       searchNoResult: '검색 결과가 없습니다.',
       loadError: '공지사항을 불러오지 못했습니다. 잠시 후 다시 시도해주세요.',
       retry: '다시 시도',
-      views: '조회수',
-      viewsCount: '회',
       editBody: '본문 편집 및 작성',
       saveBody: '본문 저장',
       bodyContent: '공지사항 본문 내용',
@@ -165,8 +162,6 @@ export default function NewsTab({ language }: NewsTabProps) {
       searchNoResult: 'No search results found.',
       loadError: 'Failed to load announcements. Please try again shortly.',
       retry: 'Retry',
-      views: 'Views',
-      viewsCount: 'views',
       editBody: 'Write/Edit Body',
       saveBody: 'Save Body',
       bodyContent: 'Announcement Body Content',
@@ -203,8 +198,6 @@ export default function NewsTab({ language }: NewsTabProps) {
       searchNoResult: '没有找到搜索结果。',
       loadError: '公告加载失败，请稍后重试。',
       retry: '重试',
-      views: '浏览量',
-      viewsCount: '次',
       editBody: '撰写/编辑正文',
       saveBody: '保存正文',
       bodyContent: '公告正文内容',
@@ -255,7 +248,7 @@ export default function NewsTab({ language }: NewsTabProps) {
   const handleDeleteNotice = (id: string, e: React.MouseEvent) => {
     e.stopPropagation();
     if (window.confirm(curr.adminConfirmDelete)) {
-      fetch(`/api/notices/${id}`, { method: 'DELETE', headers: adminHeaders() })
+      fetch(`/api/notices?id=${encodeURIComponent(id)}`, { method: 'DELETE', headers: adminHeaders() })
         .then((res) => {
           if (res.status === 401) {
             handleUnauthorized();
@@ -321,7 +314,7 @@ export default function NewsTab({ language }: NewsTabProps) {
         date: inputDate
       };
 
-      fetch(`/api/notices/${editingNotice.id}`, {
+      fetch(`/api/notices?id=${encodeURIComponent(editingNotice.id)}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json', ...adminHeaders() },
         body: JSON.stringify(updatedItem)
@@ -389,33 +382,11 @@ export default function NewsTab({ language }: NewsTabProps) {
     }
   };
 
-  // Click on a notice to view detail and increment view count
+  // Click on a notice to view detail
   const handleOpenNoticeDetail = (notice: NoticeItem) => {
-    // 1. Increment view count on server
-    fetch(`/api/notices/${notice.id}/view`, { method: 'POST' })
-      .then((res) => {
-        if (!res.ok) throw new Error('View failed');
-        return res.json();
-      })
-      .then((data) => {
-        setNotices((prev) =>
-          prev.map((item) =>
-            item.id === notice.id
-              ? { ...item, views: data.views }
-              : item
-          )
-        );
-        setSelectedNotice({
-          ...notice,
-          views: data.views
-        });
-      })
-      .catch((err) => {
-        console.error('Error incrementing view:', err);
-        setSelectedNotice(notice);
-      });
+    setSelectedNotice(notice);
 
-    // 2. Prepare detail text fields in case admin edits it
+    // Prepare detail text fields in case admin edits it
     setDetailContentKo(notice.contentKo || '');
     setDetailContentEn(notice.contentEn || '');
     setDetailContentZh(notice.contentZh || '');
@@ -434,7 +405,7 @@ export default function NewsTab({ language }: NewsTabProps) {
       contentZh: detailContentZh
     };
 
-    fetch(`/api/notices/${selectedNotice.id}`, {
+    fetch(`/api/notices?id=${encodeURIComponent(selectedNotice.id)}`, {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json', ...adminHeaders() },
       body: JSON.stringify(updatedFields)
@@ -612,11 +583,6 @@ export default function NewsTab({ language }: NewsTabProps) {
                     <span>{notice.date}</span>
                   </div>
 
-                  <div className="flex items-center gap-1.5 text-slate-400 text-[11px] font-mono bg-slate-50 px-2.5 py-1 rounded-lg">
-                    <Eye className="w-3.5 h-3.5 text-slate-400" />
-                    <span>{notice.views || 0}</span>
-                  </div>
-                  
                   {isAdmin && (
                     <div className="flex items-center gap-1 transition-opacity">
                       <button
@@ -908,10 +874,6 @@ export default function NewsTab({ language }: NewsTabProps) {
                     <div className="flex items-center gap-1.5">
                       <CalendarDays className="w-3.5 h-3.5" />
                       <span>{selectedNotice.date}</span>
-                    </div>
-                    <div className="flex items-center gap-1.5">
-                      <Eye className="w-3.5 h-3.5" />
-                      <span>{selectedNotice.views || 0}{curr.viewsCount}</span>
                     </div>
                   </div>
                 </div>

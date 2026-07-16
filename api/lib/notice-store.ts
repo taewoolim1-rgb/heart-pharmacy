@@ -8,7 +8,6 @@ export interface NewNoticeInput {
   contentEn: string;
   contentZh: string;
   date: string;
-  views?: number;
 }
 
 export interface NoticeStore {
@@ -16,5 +15,4 @@ export interface NoticeStore {
   create(input: NewNoticeInput): Promise<NoticeItem>;
   update(id: string, patch: Partial<NoticeItem>): Promise<NoticeItem | null>;
   remove(id: string): Promise<void>;
-  incrementView(id: string): Promise<number | null>;
 }

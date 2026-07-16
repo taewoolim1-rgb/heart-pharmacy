@@ -14,8 +14,7 @@ const DEFAULT_NOTICES: NoticeItem[] = [
     contentKo: '안녕하세요. 제주 노형오거리의 365일 연중무휴 야간 조제 약국, 제주마음약국입니다.',
     contentEn: 'Hello, this is Jeju Heart Pharm, your 365-day late-night compounding pharmacy at Nohyeong Five-way Intersection, Jeju.',
     contentZh: '您好，这里是位于济州老衡五岔路口、365天全年无休的夜间配药药店——济州心药店。',
-    date: '2026.07.12',
-    views: 45
+    date: '2026.07.12'
   },
   {
     id: '2',
@@ -25,8 +24,7 @@ const DEFAULT_NOTICES: NoticeItem[] = [
     contentKo: '제주마음약국은 보다 정밀하고 위생적이며 신속한 조제 서비스를 실현하기 위해 최첨단 ATC 2호기를 업그레이드 완료하였습니다.',
     contentEn: 'Jeju Heart Pharm has upgraded our second ATC unit to the latest premium model to achieve more precise, hygienic, and rapid compounding services.',
     contentZh: '济州心药店为了实现更精准、更卫生、更快速的配药服务，已将第2台尖端ATC机全面升级为最新款高端机型。',
-    date: '2026.06.28',
-    views: 28
+    date: '2026.06.28'
   },
   {
     id: '3',
@@ -36,8 +34,7 @@ const DEFAULT_NOTICES: NoticeItem[] = [
     contentKo: '본격적인 여름철을 맞아 제주도의 아름다운 숲길, 오름, 그리고 야외 잔디밭을 찾으시는 관광객분들이 급증하고 있습니다.',
     contentEn: "With the peak summer season, many tourists are visiting Jeju's beautiful forest paths, oreums, and outdoor lawns.",
     contentZh: '随着盛夏时节的到来，前往济州岛美丽的林荫路、寄生火山以及户外草地的游客急剧增加。',
-    date: '2026.06.15',
-    views: 62
+    date: '2026.06.15'
   }
 ];
 
@@ -71,7 +68,7 @@ export function createFileStore(): NoticeStore {
 
     async create(input) {
       const notices = load();
-      const notice: NoticeItem = { id: Date.now().toString(), views: 0, ...input };
+      const notice: NoticeItem = { id: Date.now().toString(), ...input };
       save([notice, ...notices]);
       return notice;
     },
@@ -88,15 +85,6 @@ export function createFileStore(): NoticeStore {
     async remove(id) {
       const notices = load();
       save(notices.filter((n) => n.id !== id));
-    },
-
-    async incrementView(id) {
-      const notices = load();
-      const notice = notices.find((n) => n.id === id);
-      if (!notice) return null;
-      notice.views = (notice.views || 0) + 1;
-      save(notices);
-      return notice.views;
     }
   };
 }
