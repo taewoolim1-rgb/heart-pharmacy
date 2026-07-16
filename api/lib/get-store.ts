@@ -1,6 +1,6 @@
 import type { NoticeStore } from './notice-store';
-import { createSupabaseStore } from './supabase-store';
-import { createFileStore } from './file-store';
+import { createSupabaseStore } from './supabase-store.js';
+import { createFileStore } from './file-store.js';
 
 let store: NoticeStore | null = null;
 
