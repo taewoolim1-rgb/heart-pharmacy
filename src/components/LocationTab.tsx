@@ -177,7 +177,7 @@ export default function LocationTab({ language, setLanguage }: LocationTabProps)
             <div className="rounded-2xl overflow-hidden border border-slate-200 shadow-sm">
               <img
                 src="/images/heart-pharmacy-map.jpg"
-                alt="Heart Pharmacy location map"
+                alt={language === 'ko' ? '제주마음약국 위치 지도 - 신제주 연동 한라병원 옆' : language === 'zh' ? '济州心药店位置地图 - 新济州莲洞汉拿医院旁' : 'Jeju Heart Pharm location map - next to Halla Hospital, Yeondong'}
                 className="w-full h-auto block"
               />
             </div>
