@@ -11,9 +11,9 @@ const DEFAULT_NOTICES: NoticeItem[] = [
     titleKo: '[공지] 2026년 하절기 휴가 기간 야간 정상 조제 업무 안내',
     titleEn: '[Notice] Guide to Late-Night Compounding Services During 2026 Summer Vacation',
     titleZh: '[公告] 2026夏季休假期间正常配药指南',
-    contentKo: '안녕하세요. 제주 노형오거리의 365일 연중무휴 야간 조제 약국, 제주마음약국입니다.',
-    contentEn: 'Hello, this is Jeju Heart Pharm, your 365-day late-night compounding pharmacy at Nohyeong Five-way Intersection, Jeju.',
-    contentZh: '您好，这里是位于济州老衡五岔路口、365天全年无休的夜间配药药店——济州心药店。',
+    contentKo: '안녕하세요. 제주 연동의 365일 연중무휴 야간 조제 약국, 제주마음약국입니다.',
+    contentEn: 'Hello, this is Jeju Heart Pharm, your 365-day late-night compounding pharmacy in Yeondong, Jeju.',
+    contentZh: '您好，这里是位于济州莲洞、365天全年无休的夜间配药药店——济州心药店。',
     date: '2026.07.12'
   },
   {
