@@ -4,6 +4,7 @@
  */
 
 import React, { useState, useEffect } from 'react';
+import { Routes, Route, useParams, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'motion/react';
 import {
   Heart,
@@ -16,11 +17,75 @@ import { TabId, Language } from './types';
 import HomeTab from './components/HomeTab';
 import LocationTab from './components/LocationTab';
 import NewsTab from './components/NewsTab';
+import SeoHead from './components/SeoHead';
+import { buildPath } from './seoConfig';
+
+const VALID_TABS: TabId[] = ['home', 'location', 'news'];
+const VALID_LANGS: Language[] = ['en', 'zh'];
+
+/**
+ * Parses the two optional path segments into { lang, tab }.
+ * Supported URL shapes:
+ *   /                -> ko, home
+ *   /location        -> ko, location
+ *   /news            -> ko, news
+ *   /en               -> en, home
+ *   /en/location      -> en, location
+ *   /zh/news          -> zh, news
+ */
+function parseParams(seg1?: string, seg2?: string): { lang: Language; tab: TabId } {
+  if (seg1 && (VALID_LANGS as string[]).includes(seg1)) {
+    const lang = seg1 as Language;
+    const tab = (seg2 && (VALID_TABS as string[]).includes(seg2)) ? (seg2 as TabId) : 'home';
+    return { lang, tab };
+  }
+  if (seg1 && (VALID_TABS as string[]).includes(seg1)) {
+    return { lang: 'ko', tab: seg1 as TabId };
+  }
+  return { lang: 'ko', tab: 'home' };
+}
+
+function RouteShell() {
+  const params = useParams<{ seg1?: string; seg2?: string }>();
+  const { lang, tab } = parseParams(params.seg1, params.seg2);
+  return <AppShell lang={lang} activeTab={tab} />;
+}
 
 export default function App() {
-  const [activeTab, setActiveTab] = useState<TabId>('home');
+  return (
+    <Routes>
+      <Route path="/" element={<RouteShell />} />
+      <Route path="/:seg1" element={<RouteShell />} />
+      <Route path="/:seg1/:seg2" element={<RouteShell />} />
+    </Routes>
+  );
+}
+
+interface AppShellProps {
+  lang: Language;
+  activeTab: TabId;
+}
+
+function AppShell({ lang, activeTab }: AppShellProps) {
+  const navigate = useNavigate();
+  const [language, setLanguageState] = useState<Language>(lang);
   const [isPharmacyOpen, setIsPharmacyOpen] = useState<boolean>(true);
-  const [language, setLanguage] = useState<Language>('ko');
+
+  // Keep local language state in sync with the URL (e.g. browser back/forward).
+  useEffect(() => {
+    setLanguageState(lang);
+  }, [lang]);
+
+  // Navigate to the equivalent path when the language changes.
+  const setLanguage = (newLang: Language) => {
+    navigate(buildPath(newLang, activeTab));
+  };
+
+  // Navigate to the equivalent path when the tab changes.
+  const handleTabChange = (tabId: TabId) => {
+    navigate(buildPath(language, tabId));
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
 
   // Compute real-time pharmacy open/closed state
   // 평일: 08:30 ~ 22:00 | 주말·공휴일: 15:00 ~ 22:00
@@ -128,20 +193,17 @@ export default function App() {
     { id: 'news', label: curr.menuNews }
   ];
 
-  const handleTabChange = (tabId: TabId) => {
-    setActiveTab(tabId);
-    window.scrollTo({ top: 0, behavior: 'smooth' });
-  };
-
   return (
     <div id="app-root" className="min-h-screen bg-slate-50 text-slate-800 flex flex-col font-sans select-none antialiased break-keep">
+      <SeoHead lang={language} tab={activeTab} />
+
       {/* 2. Sticky Glassmorphism Header */}
       <header id="main-header" className="sticky top-0 bg-white/90 backdrop-blur-md border-b border-slate-100 z-40 transition-all shadow-xs">
         {/* Desktop Header */}
         <div className="hidden md:flex max-w-7xl mx-auto px-6 md:px-10 h-20 items-center justify-between">
-          
+
           {/* Logo (Custom design heart shape + leaf representation) */}
-          <div 
+          <div
             onClick={() => handleTabChange('home')}
             className="flex items-center gap-2.5 cursor-pointer group select-none"
           >
@@ -169,14 +231,14 @@ export default function App() {
                   id={`nav-link-${item.id}`}
                   onClick={() => handleTabChange(item.id as TabId)}
                   className={`px-4 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer relative ${
-                    isActive 
-                      ? 'text-emerald-700 bg-emerald-50' 
+                    isActive
+                      ? 'text-emerald-700 bg-emerald-50'
                       : 'text-slate-600 hover:text-emerald-600 hover:bg-slate-50'
                   }`}
                 >
                   {item.label}
                   {isActive && (
-                    <motion.div 
+                    <motion.div
                       layoutId="activeTabMarker"
                       className="absolute bottom-0 left-4 right-4 h-0.5 bg-emerald-600"
                       transition={{ type: 'spring', stiffness: 380, damping: 30 }}
@@ -192,17 +254,17 @@ export default function App() {
             {/* Global Language Selector (Desktop) */}
             <div className="flex items-center gap-1 bg-slate-100/80 p-1 rounded-xl border border-slate-200/45">
               <Globe className="w-3.5 h-3.5 text-slate-400 mx-1.5" />
-              {(['ko', 'en', 'zh'] as const).map((lang) => (
+              {(['ko', 'en', 'zh'] as const).map((lng) => (
                 <button
-                  key={lang}
-                  onClick={() => setLanguage(lang)}
+                  key={lng}
+                  onClick={() => setLanguage(lng)}
                   className={`px-2.5 py-1 rounded-lg text-[10px] font-extrabold transition-all cursor-pointer ${
-                    language === lang
+                    language === lng
                       ? 'bg-emerald-600 text-white shadow-sm'
                       : 'text-slate-500 hover:text-slate-800 hover:bg-slate-200'
                   }`}
                 >
-                  {lang === 'ko' ? 'KO' : lang === 'en' ? 'EN' : 'ZH'}
+                  {lng === 'ko' ? 'KO' : lng === 'en' ? 'EN' : 'ZH'}
                 </button>
               ))}
             </div>
@@ -230,7 +292,7 @@ export default function App() {
           {/* Top row: Logo (left), Phone button & Language (right) */}
           <div className="flex items-center justify-between">
             {/* Logo */}
-            <div 
+            <div
               onClick={() => handleTabChange('home')}
               className="flex items-center gap-2 cursor-pointer select-none"
             >
@@ -251,17 +313,17 @@ export default function App() {
             <div className="flex items-center gap-1.5">
               {/* Language Selector */}
               <div className="flex items-center bg-slate-100 p-0.5 rounded-lg border border-slate-200/50">
-                {(['ko', 'en', 'zh'] as const).map((lang) => (
+                {(['ko', 'en', 'zh'] as const).map((lng) => (
                   <button
-                    key={lang}
-                    onClick={() => setLanguage(lang)}
+                    key={lng}
+                    onClick={() => setLanguage(lng)}
                     className={`px-1.5 py-0.5 rounded text-[8px] font-black transition-all cursor-pointer ${
-                      language === lang
+                      language === lng
                         ? 'bg-emerald-600 text-white shadow-xs'
                         : 'text-slate-500 hover:text-slate-800'
                     }`}
                   >
-                    {lang === 'ko' ? '한' : lang === 'en' ? 'EN' : '中'}
+                    {lng === 'ko' ? '한' : lng === 'en' ? 'EN' : '中'}
                   </button>
                 ))}
               </div>
@@ -288,8 +350,8 @@ export default function App() {
                   id={`mobile-nav-link-${item.id}`}
                   onClick={() => handleTabChange(item.id as TabId)}
                   className={`py-1.5 rounded-lg text-[11px] font-black text-center transition-all cursor-pointer ${
-                    isActive 
-                      ? 'text-emerald-900 bg-emerald-500/15 shadow-xs' 
+                    isActive
+                      ? 'text-emerald-900 bg-emerald-500/15 shadow-xs'
                       : 'text-slate-600 hover:text-emerald-600'
                   }`}
                 >
@@ -327,7 +389,7 @@ export default function App() {
       {/* 5. Highly Professional Trust Footer */}
       <footer id="main-footer" className="bg-slate-900 text-slate-400 border-t border-slate-800 text-xs py-12">
         <div className="max-w-7xl mx-auto px-6 md:px-10 grid grid-cols-1 md:grid-cols-12 gap-8 items-start">
-          
+
           {/* Logo & Slogan */}
           <div className="md:col-span-5 space-y-4">
             <div className="flex items-center gap-2">
