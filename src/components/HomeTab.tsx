@@ -51,28 +51,28 @@ export default function HomeTab({ setActiveTab, language }: HomeTabProps) {
       categoriesList: [
         {
           title: 'K-Beauty',
-          desc: 'K-뷰티 스킨부스터, 특화 마스크 및 프리미엄 코스메틱',
-          tags: ['물광피부', '메디컬 뷰티', '장벽개선']
+          desc: 'K-뷰티 스킨부스터, 특화 마스크 및 프리미엄 약국화장품',
+          tags: ['물광피부', '약국화장품', '장벽개선']
         },
         {
           title: 'PDRN products',
-          desc: '연어 DNA 유래 PDRN 성분으로 조직 재생 및 탄력',
-          tags: ['재생 바이오', '연어 주사 성분', '세포 탄력']
+          desc: '연어 DNA 유래 PDRN 성분으로 조직 재생 및 탄력, 리쥬란·리쥬올 취급',
+          tags: ['리쥬란', '리쥬올', '세포 탄력']
         },
         {
           title: 'Acne care',
-          desc: '민감성 피부 및 여드름성 트러블 스킨 안심 진정 솔루션',
-          tags: ['트러블 케어', '모공 정화', '유수분 밸런스']
+          desc: '민감성 피부 및 여드름성 트러블 스킨 안심 진정 솔루션, 애크논·아렉스 취급',
+          tags: ['애크논', '아렉스', '유수분 밸런스']
         },
         {
           title: 'Scar care',
-          desc: '수술 흔적 및 상처 흉터 케어를 위한 실리콘 겔 & 패치',
-          tags: ['흔적 케어', '실리콘 겔', '흉터 솔루션']
+          desc: '수술 흔적 및 상처 흉터 케어를 위한 실리콘 겔 & 패치, 노스카나 취급',
+          tags: ['노스카나', '실리콘 겔', '흉터 솔루션']
         },
         {
           title: 'Health care',
-          desc: '현대인의 활력 충전, 피로 회복을 위한 고함량 맞춤 영양제',
-          tags: ['면역력 부스팅', '종합 비타민', '피로 회복']
+          desc: '현대인의 활력 충전, 피로 회복을 위한 고함량 맞춤 영양제, 멜라토닝·비판텐 상비약',
+          tags: ['멜라토닝', '비판텐', '피로 회복']
         }
       ],
       slides: [
@@ -115,23 +115,23 @@ export default function HomeTab({ setActiveTab, language }: HomeTabProps) {
         },
         {
           title: 'PDRN products',
-          desc: 'Salmon-extracted PDRN for skin repair and elasticity',
-          tags: ['Bioregeneration', 'Cell Elasticity', 'Salmon DNA']
+          desc: 'Salmon-extracted PDRN for skin repair and elasticity, including Rejuran and Rejuor',
+          tags: ['Rejuran', 'Rejuor', 'Cell Elasticity']
         },
         {
           title: 'Acne care',
-          desc: 'Targeted soothing, non-comedogenic care for troubled skin',
-          tags: ['Trouble Relief', 'Pore Purification', 'Soothe & Calm']
+          desc: 'Targeted soothing, non-comedogenic care for troubled skin, including Acnon and Arex',
+          tags: ['Acnon', 'Arex', 'Soothe & Calm']
         },
         {
           title: 'Scar care',
-          desc: 'Medical-grade silicone gels and recovery patches for scars',
-          tags: ['Mark Recovery', 'Silicone Gel', 'Scar Solution']
+          desc: 'Medical-grade silicone gels and recovery patches for scars, including Noscarna',
+          tags: ['Noscarna', 'Silicone Gel', 'Scar Solution']
         },
         {
           title: 'Health care',
-          desc: 'Highly potent premium multivitamins for daily energy boosts',
-          tags: ['Immune Boosting', 'Daily Vitality', 'Fatigue Recovery']
+          desc: 'Highly potent premium multivitamins for daily energy boosts, plus everyday essentials like Melatonin and Bepanthen',
+          tags: ['Melatonin', 'Bepanthen', 'Fatigue Recovery']
         }
       ],
       slides: [
@@ -174,23 +174,23 @@ export default function HomeTab({ setActiveTab, language }: HomeTabProps) {
         },
         {
           title: 'PDRN products',
-          desc: '蕴含三文鱼 DNA 提炼 PDRN 成分，深层修护皮肤细胞',
-          tags: ['组织再生', '三文鱼成分', '细胞弹力']
+          desc: '蕴含三文鱼 DNA 提炼 PDRN 成分，深层修护皮肤细胞，备有 Rejuran、Rejuor',
+          tags: ['Rejuran', 'Rejuor', '细胞弹力']
         },
         {
           title: 'Acne care',
-          desc: '专为敏感性及痘痘痤疮肌肤量身定制的温和控油舒缓',
-          tags: ['祛痘控油', '收缩毛孔', '温和舒缓']
+          desc: '专为敏感性及痘痘痤疮肌肤量身定制的温和控油舒缓，备有 Acnon、Arex',
+          tags: ['Acnon', 'Arex', '温和舒缓']
         },
         {
           title: 'Scar care',
-          desc: '专用于外科及剖腹产术后疤痕修复的医用级硅胶贴片',
-          tags: ['疤痕修复', '医用硅胶', '伤口恢复']
+          desc: '专用于外科及剖腹产术后疤痕修复的医用级硅胶贴片，备有 Noscarna',
+          tags: ['Noscarna', '医用硅胶', '伤口恢复']
         },
         {
           title: 'Health care',
-          desc: '专为日常疲劳及免疫低下设计的高含量每日定制营养素',
-          tags: ['免疫调节', '每日活力', '抗疲劳营养']
+          desc: '专为日常疲劳及免疫低下设计的高含量每日定制营养素，另备褪黑素、Bepanthen 等常备药',
+          tags: ['褪黑素', 'Bepanthen', '抗疲劳营养']
         }
       ],
       slides: [
